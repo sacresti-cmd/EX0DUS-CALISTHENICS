@@ -158,6 +158,7 @@ function dayDiff(from, to) {
 function calculatePlanRanking(profile) {
   const metric = toMetric(profile);
   const bmi = metric.weightKg / ((metric.heightCm / 100) ** 2);
+  const bmi = profile.weight / ((profile.height / 100) ** 2);
   const strength = profile.maxPushups * 1.1 + profile.maxPullups * 2.6;
 
   const scores = {
@@ -176,24 +177,6 @@ function toMetric(profile) {
     weightKg: profile.weightLbs * 0.45359237,
     heightCm: profile.heightFeet * 30.48
   };
-}
-
-function ensureStateIntegrity() {
-  if (!state.profile) return;
-
-  const hasPlan = state.plan && state.plan.name && Array.isArray(state.plan.week) && state.plan.week.length === 7;
-  if (!hasPlan) {
-    const ranking = calculatePlanRanking(state.profile);
-    state.plan = generatePlan(ranking[0].name);
-  }
-
-  if (!Array.isArray(state.quests) || state.quests.length === 0) {
-    buildQuests();
-  }
-
-  if (!state.metrics) {
-    state.metrics = { xp: 0, level: 1, coins: 0, streak: 0, freezeStreaks: 0, lastActiveDate: null };
-  }
 }
 
 function generatePlan(planName) {
@@ -379,6 +362,8 @@ function populateUpdateStatsForm() {
   el.updateStatsForm.innerHTML = `
     <label>Weight (lbs)<input name="weightLbs" type="number" step="0.1" value="${p.weightLbs}" required /></label>
     <label>Height (ft)<input name="heightFeet" type="number" step="0.1" value="${p.heightFeet}" required /></label>
+    <label>Weight (kg)<input name="weight" type="number" step="0.1" value="${p.weight}" required /></label>
+    <label>Height (cm)<input name="height" type="number" step="0.1" value="${p.height}" required /></label>
     <label>Max Pushups<input name="maxPushups" type="number" value="${p.maxPushups}" required /></label>
     <label>Max Pullups<input name="maxPullups" type="number" value="${p.maxPullups}" required /></label>
     <button class="btn" type="submit">Recalculate</button>
@@ -390,6 +375,8 @@ function populateUpdateStatsForm() {
     state.profile = {
       weightLbs: Number(form.get("weightLbs")),
       heightFeet: Number(form.get("heightFeet")),
+      weight: Number(form.get("weight")),
+      height: Number(form.get("height")),
       maxPushups: Number(form.get("maxPushups")),
       maxPullups: Number(form.get("maxPullups"))
     };
@@ -429,6 +416,7 @@ function renderBadges() {
     state.shop.xpMultiplierUntil && new Date(state.shop.xpMultiplierUntil) > new Date() ? "x2 XP Active" : "x1 XP",
     state.metrics.streak >= 7 ? "7-Day Streak" : "Streak Building",
     `Peak: ${topMuscle.muscle} ${topTier.name}`
+    state.metrics.streak >= 7 ? "7-Day Streak" : "Streak Building"
   ];
 
   el.badgeRow.innerHTML = badges.map((b) => `<span class="badge">${b}</span>`).join("");
@@ -594,6 +582,8 @@ function bootstrap() {
     state.profile = {
       weightLbs: Number(form.get("weightLbs")),
       heightFeet: Number(form.get("heightFeet")),
+      weight: Number(form.get("weight")),
+      height: Number(form.get("height")),
       maxPushups: Number(form.get("maxPushups")),
       maxPullups: Number(form.get("maxPullups"))
     };
