@@ -142,6 +142,8 @@ function loadState() {
       maxPullups: state.profile.maxPullups
     };
   }
+
+  ensureStateIntegrity();
 }
 
 function formatDate(date = new Date()) {
@@ -533,6 +535,8 @@ function renderMetrics() {
 }
 
 function render() {
+  ensureStateIntegrity();
+
   if (!state.profile) {
     el.onboarding.classList.remove("hidden");
     el.dashboard.classList.add("hidden");
