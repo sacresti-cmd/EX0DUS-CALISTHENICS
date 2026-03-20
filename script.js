@@ -393,6 +393,7 @@ function renderBadges() {
     state.shop.xpMultiplierUntil && new Date(state.shop.xpMultiplierUntil) > new Date() ? "x2 XP Active" : "x1 XP",
     state.metrics.streak >= 7 ? "7-Day Streak" : "Streak Building",
     `Peak: ${topMuscle.muscle} ${topTier.name}`
+    state.metrics.streak >= 7 ? "7-Day Streak" : "Streak Building"
   ];
 
   el.badgeRow.innerHTML = badges.map((b) => `<span class="badge">${b}</span>`).join("");
