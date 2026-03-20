@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EX0DUS-CALISTHENICS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="noise-overlay" aria-hidden="true"></div>
+    <main class="app" id="app">
+      <section id="onboarding" class="panel hidden" aria-labelledby="onboardingTitle">
+        <header class="panel-header">
+          <p class="eyebrow">INITIALIZE PROFILE</p>
+          <h1 id="onboardingTitle">Welcome to EX0DUS-CALISTHENICS</h1>
+          <p>Enter your stats to generate a personalized training arc.</p>
+        </header>
+
+        <form id="onboardingForm" class="grid-form">
+          <label>
+            Body Weight (kg)
+            <input type="number" step="0.1" min="20" max="300" name="weight" required />
+          </label>
+          <label>
+            Height (cm)
+            <input type="number" step="0.1" min="100" max="250" name="height" required />
+          </label>
+          <label>
+            Max Pushups
+            <input type="number" min="0" max="500" name="maxPushups" required />
+          </label>
+          <label>
+            Max Pullups
+            <input type="number" min="0" max="200" name="maxPullups" required />
+          </label>
+          <button type="submit" class="btn btn-primary">Generate My Plan</button>
+        </form>
+
+        <div id="planRanking" class="ranking hidden"></div>
+      </section>
+
+      <section id="dashboard" class="hidden">
+        <header class="topbar panel">
+          <div>
+            <p class="eyebrow">EX0DUS OPERATIVE</p>
+            <h2 id="welcomeText">Welcome back</h2>
+            <p id="planSummary"></p>
+          </div>
+          <div class="topbar-stats">
+            <div class="chip">
+              <span class="chip-label">LEVEL</span>
+              <strong id="levelValue">1</strong>
+            </div>
+            <div class="chip">
+              <span class="chip-label">XP</span>
+              <strong id="xpValue">0</strong>
+            </div>
+            <div class="chip">
+              <span class="chip-label">COINS</span>
+              <strong id="coinsValue">0</strong>
+            </div>
+            <div class="chip">
+              <span class="chip-label">STREAK</span>
+              <strong id="streakValue">0</strong>
+            </div>
+          </div>
+        </header>
+
+        <section class="panel progress-panel">
+          <div class="progress-header">
+            <h3>Level Progress</h3>
+            <span id="nextLevelText">0 / 100 XP</span>
+          </div>
+          <div class="progress-track" aria-label="XP progress">
+            <div id="xpBar" class="progress-fill"></div>
+          </div>
+          <div id="badgeRow" class="badge-row"></div>
+        </section>
+
+        <section class="layout-grid">
+          <article class="panel">
+            <div class="panel-header-row">
+              <h3>Muscle Rank Matrix</h3>
+              <span class="muted">Color-coded by mastery tier</span>
+            </div>
+            <div class="muscle-layout">
+              <svg
+                id="muscleMap"
+                class="muscle-map"
+                viewBox="0 0 240 420"
+                role="img"
+                aria-label="Body map with muscle ranks"
+              >
+                <circle data-muscle="head" cx="120" cy="36" r="24"></circle>
+                <rect data-muscle="shoulders" x="63" y="66" width="114" height="28" rx="12"></rect>
+                <rect data-muscle="chest" x="74" y="98" width="92" height="54" rx="14"></rect>
+                <rect data-muscle="back" x="78" y="155" width="84" height="44" rx="12"></rect>
+                <rect data-muscle="core" x="83" y="202" width="74" height="64" rx="14"></rect>
+                <rect data-muscle="arms" x="36" y="98" width="30" height="120" rx="13"></rect>
+                <rect data-muscle="arms" x="174" y="98" width="30" height="120" rx="13"></rect>
+                <rect data-muscle="legs" x="82" y="272" width="30" height="124" rx="13"></rect>
+                <rect data-muscle="legs" x="128" y="272" width="30" height="124" rx="13"></rect>
+              </svg>
+              <div id="muscleLegend" class="muscle-legend"></div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header-row">
+              <h3>This Week's Plan</h3>
+              <button id="newDayBtn" class="btn btn-ghost">Next Day</button>
+            </div>
+            <p class="muted" id="currentDayLabel"></p>
+            <ul id="exerciseList" class="checklist"></ul>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header-row">
+              <h3>Daily Quests</h3>
+              <button id="rerollQuestBtn" class="btn btn-ghost">Reroll (20 coins)</button>
+            </div>
+            <ul id="questList" class="quest-list"></ul>
+          </article>
+
+          <article class="panel">
+            <h3>Exodus Shop</h3>
+            <div id="shopList" class="shop-list"></div>
+          </article>
+
+          <article class="panel">
+            <h3>Profile Tuning</h3>
+            <p class="muted">Update stats to recalculate your optimal plan ranking.</p>
+            <form id="updateStatsForm" class="grid-form compact"></form>
+          </article>
+        </section>
+      </section>
+
+      <aside id="toastStack" class="toast-stack" aria-live="polite"></aside>
+      <div id="levelUpModal" class="modal hidden" role="dialog" aria-modal="true">
+        <div class="modal-card">
+          <p class="eyebrow">LEVEL UP</p>
+          <h3 id="levelUpText">Level 2 Unlocked</h3>
+          <button id="closeLevelModal" class="btn btn-primary">Continue</button>
+        </div>
+      </div>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
