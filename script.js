@@ -134,6 +134,14 @@ function loadState() {
   if (!state.muscles) {
     state.muscles = { chest: 0, arms: 0, back: 0, core: 0, legs: 0, shoulders: 0 };
   }
+  if (state.profile && typeof state.profile.weight === "number" && typeof state.profile.height === "number") {
+    state.profile = {
+      weightLbs: Number((state.profile.weight * 2.20462262).toFixed(1)),
+      heightFeet: Number((state.profile.height / 30.48).toFixed(2)),
+      maxPushups: state.profile.maxPushups,
+      maxPullups: state.profile.maxPullups
+    };
+  }
 }
 
 function formatDate(date = new Date()) {
@@ -146,6 +154,8 @@ function dayDiff(from, to) {
 }
 
 function calculatePlanRanking(profile) {
+  const metric = toMetric(profile);
+  const bmi = metric.weightKg / ((metric.heightCm / 100) ** 2);
   const bmi = profile.weight / ((profile.height / 100) ** 2);
   const strength = profile.maxPushups * 1.1 + profile.maxPullups * 2.6;
 
@@ -158,6 +168,13 @@ function calculatePlanRanking(profile) {
   return Object.entries(scores)
     .map(([name, score]) => ({ name, score: Math.round(score) }))
     .sort((a, b) => b.score - a.score);
+}
+
+function toMetric(profile) {
+  return {
+    weightKg: profile.weightLbs * 0.45359237,
+    heightCm: profile.heightFeet * 30.48
+  };
 }
 
 function generatePlan(planName) {
@@ -341,6 +358,8 @@ function purchase(itemId) {
 function populateUpdateStatsForm() {
   const p = state.profile;
   el.updateStatsForm.innerHTML = `
+    <label>Weight (lbs)<input name="weightLbs" type="number" step="0.1" value="${p.weightLbs}" required /></label>
+    <label>Height (ft)<input name="heightFeet" type="number" step="0.1" value="${p.heightFeet}" required /></label>
     <label>Weight (kg)<input name="weight" type="number" step="0.1" value="${p.weight}" required /></label>
     <label>Height (cm)<input name="height" type="number" step="0.1" value="${p.height}" required /></label>
     <label>Max Pushups<input name="maxPushups" type="number" value="${p.maxPushups}" required /></label>
@@ -352,6 +371,8 @@ function populateUpdateStatsForm() {
     event.preventDefault();
     const form = new FormData(el.updateStatsForm);
     state.profile = {
+      weightLbs: Number(form.get("weightLbs")),
+      heightFeet: Number(form.get("heightFeet")),
       weight: Number(form.get("weight")),
       height: Number(form.get("height")),
       maxPushups: Number(form.get("maxPushups")),
@@ -555,6 +576,8 @@ function bootstrap() {
     event.preventDefault();
     const form = new FormData(el.onboardingForm);
     state.profile = {
+      weightLbs: Number(form.get("weightLbs")),
+      heightFeet: Number(form.get("heightFeet")),
       weight: Number(form.get("weight")),
       height: Number(form.get("height")),
       maxPushups: Number(form.get("maxPushups")),
