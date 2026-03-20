@@ -224,6 +224,68 @@ input:focus {
   gap: 0.65rem;
 }
 
+.muscle-layout {
+  display: grid;
+  grid-template-columns: minmax(180px, 260px) 1fr;
+  align-items: center;
+  gap: 1rem;
+}
+
+.muscle-map {
+  width: 100%;
+  max-width: 260px;
+  margin-inline: auto;
+  border: 1px solid #2f2f2f;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #0d0d0d, #070707);
+  padding: 0.45rem;
+}
+
+.muscle-map [data-muscle] {
+  stroke: rgba(255, 255, 255, 0.5);
+  stroke-width: 1.4;
+  transition: fill 0.35s ease, filter 0.35s ease;
+}
+
+.muscle-map [data-muscle=\"head\"] {
+  fill: #2f2f2f !important;
+  opacity: 0.8;
+}
+
+.muscle-legend {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.muscle-row {
+  border: 1px solid #2e2e2e;
+  border-radius: 12px;
+  padding: 0.5rem 0.65rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #0f0f0f;
+}
+
+.muscle-left {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.tier {
+  font-size: 0.74rem;
+  border: 1px solid #3a3a3a;
+  border-radius: 999px;
+  padding: 0.15rem 0.5rem;
+}
+
 .badge {
   display: inline-flex;
   border: 1px solid #3f3f3f;
@@ -299,6 +361,10 @@ input:focus {
 
 @media (max-width: 920px) {
   .layout-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .muscle-layout {
     grid-template-columns: 1fr;
   }
 

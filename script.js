@@ -54,12 +54,37 @@ const SHOP_ITEMS = [
   { id: "skin", name: "UI Pulse Customization", cost: 60, description: "Unlock animated UI pulse accent.", type: "themeUnlock" }
 ];
 
+const MUSCLE_GROUPS = ["chest", "arms", "back", "core", "legs", "shoulders"];
+const RANK_TIERS = [
+  { name: "Bronze", min: 0, color: "#8b5a2b" },
+  { name: "Silver", min: 200, color: "#b0bec5" },
+  { name: "Gold", min: 420, color: "#f2c14e" },
+  { name: "Platinum", min: 700, color: "#67d5c6" },
+  { name: "Diamond", min: 980, color: "#64b5ff" },
+  { name: "Exodus", min: 1300, color: "#ff4d6d" }
+];
+
+const MUSCLE_KEYWORDS = [
+  { key: "push", gains: { chest: 8, arms: 5, shoulders: 4, core: 2 } },
+  { key: "dip", gains: { chest: 7, arms: 6, shoulders: 4 } },
+  { key: "pull", gains: { back: 8, arms: 6, shoulders: 4, core: 2 } },
+  { key: "chin", gains: { back: 7, arms: 7, core: 2 } },
+  { key: "squat", gains: { legs: 9, core: 3 } },
+  { key: "lunge", gains: { legs: 8, core: 3 } },
+  { key: "plank", gains: { core: 9, shoulders: 2 } },
+  { key: "raise", gains: { core: 7, legs: 3 } },
+  { key: "burpee", gains: { chest: 4, arms: 4, legs: 5, core: 4 } },
+  { key: "hang", gains: { back: 5, arms: 5, shoulders: 4 } },
+  { key: "mobility", gains: { shoulders: 3, core: 3, legs: 3 } }
+];
+
 const state = {
   profile: null,
   metrics: { xp: 0, level: 1, coins: 0, streak: 0, freezeStreaks: 0, lastActiveDate: null },
   plan: null,
   progress: {},
   quests: [],
+  muscles: { chest: 0, arms: 0, back: 0, core: 0, legs: 0, shoulders: 0 },
   shop: { xpMultiplierUntil: null, pulseTheme: false },
   dayIndex: 0,
   createdAt: null
@@ -81,6 +106,8 @@ const el = {
   exerciseList: document.getElementById("exerciseList"),
   questList: document.getElementById("questList"),
   shopList: document.getElementById("shopList"),
+  muscleMap: document.getElementById("muscleMap"),
+  muscleLegend: document.getElementById("muscleLegend"),
   badgeRow: document.getElementById("badgeRow"),
   currentDayLabel: document.getElementById("currentDayLabel"),
   updateStatsForm: document.getElementById("updateStatsForm"),
@@ -103,6 +130,9 @@ function loadState() {
     Object.assign(state, JSON.parse(raw));
   } catch {
     localStorage.removeItem(STORAGE_KEY);
+  }
+  if (!state.muscles) {
+    state.muscles = { chest: 0, arms: 0, back: 0, core: 0, legs: 0, shoulders: 0 };
   }
 }
 
@@ -187,6 +217,7 @@ function markExercise(dayIdx, exerciseId, completed) {
 
   if (completed) {
     addXp(xpForExercise());
+    addMuscleProgress(ex.name, ex.target);
     state.metrics.coins += 8;
     showToast(`+${xpForExercise()} XP • +8 coins`);
     animateBurst(el.xpBar);
@@ -195,6 +226,34 @@ function markExercise(dayIdx, exerciseId, completed) {
   updateDailyProgress();
   saveState();
   render();
+}
+
+function addMuscleProgress(exerciseName, target) {
+  const lower = exerciseName.toLowerCase();
+  const reps = Number(target) || 10;
+  const intensity = Math.max(1, Math.min(2.4, reps / 20));
+  let matched = false;
+
+  MUSCLE_KEYWORDS.forEach((rule) => {
+    if (!lower.includes(rule.key)) return;
+    matched = true;
+    Object.entries(rule.gains).forEach(([muscle, gain]) => {
+      state.muscles[muscle] += Math.round(gain * intensity);
+    });
+  });
+
+  if (!matched) {
+    state.muscles.core += Math.round(3 * intensity);
+    state.muscles.legs += Math.round(2 * intensity);
+  }
+}
+
+function rankForPoints(points) {
+  let tier = RANK_TIERS[0];
+  for (const entry of RANK_TIERS) {
+    if (points >= entry.min) tier = entry;
+  }
+  return tier;
 }
 
 function completeQuest(questId, completed) {
@@ -323,14 +382,53 @@ function renderRanking(ranking) {
 }
 
 function renderBadges() {
+  const topMuscle = MUSCLE_GROUPS
+    .map((muscle) => ({ muscle, points: state.muscles[muscle] }))
+    .sort((a, b) => b.points - a.points)[0];
+  const topTier = rankForPoints(topMuscle.points);
+
   const badges = [
     `Plan: ${state.plan.name}`,
     `Freeze: ${state.metrics.freezeStreaks}`,
     state.shop.xpMultiplierUntil && new Date(state.shop.xpMultiplierUntil) > new Date() ? "x2 XP Active" : "x1 XP",
+    state.metrics.streak >= 7 ? "7-Day Streak" : "Streak Building",
+    `Peak: ${topMuscle.muscle} ${topTier.name}`
     state.metrics.streak >= 7 ? "7-Day Streak" : "Streak Building"
   ];
 
   el.badgeRow.innerHTML = badges.map((b) => `<span class="badge">${b}</span>`).join("");
+}
+
+function renderMuscleSystem() {
+  const parts = el.muscleMap.querySelectorAll("[data-muscle]");
+  parts.forEach((node) => {
+    const muscle = node.dataset.muscle;
+    if (!state.muscles[muscle]) return;
+    const tier = rankForPoints(state.muscles[muscle]);
+    node.style.fill = tier.color;
+    node.style.filter = `drop-shadow(0 0 10px ${tier.color}55)`;
+  });
+
+  const ordered = MUSCLE_GROUPS
+    .map((muscle) => {
+      const points = state.muscles[muscle];
+      return { muscle, points, tier: rankForPoints(points) };
+    })
+    .sort((a, b) => b.points - a.points);
+
+  el.muscleLegend.innerHTML = ordered
+    .map(({ muscle, points, tier }) => {
+      return `
+        <div class="muscle-row">
+          <div class="muscle-left">
+            <span class="dot" style="background:${tier.color}"></span>
+            <strong>${muscle.toUpperCase()}</strong>
+          </div>
+          <span class="tier">${tier.name} • ${points}</span>
+        </div>
+      `;
+    })
+    .join("");
 }
 
 function renderExercises() {
@@ -428,6 +526,7 @@ function render() {
   renderQuests();
   renderShop();
   renderBadges();
+  renderMuscleSystem();
   populateUpdateStatsForm();
 }
 
